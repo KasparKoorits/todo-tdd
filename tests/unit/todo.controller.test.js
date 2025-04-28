@@ -6,9 +6,11 @@ const newTodo = require("../mock-data/new-todo.json");
 TodoModel.create = jest.fn();
 
 let req, res, next;
-req = httpMocks.createRequest();
-res = httpMocks.createResponse();
-next = null;
+beforeEach(() => {
+  req = {};
+  res = {};
+  next = jest.fn();
+});
 
 describe("TodoController", () => {
   beforeEach(() => {
@@ -30,5 +32,12 @@ describe("TodoController", () => {
     await TodoModel.create.mockReturnValue(newTodo);
     await TodoController.createTodo(req, res, next);
     expect(res._getJSONData()).toStrictEqual(newTodo);
+  });
+  it("should handle errors", async () => {
+    const errorMessage = { message: "Error creating todo" };
+    const rejectedPromise = Promise.reject(errorMessage);
+    TodoModel.create.mockReturnValue(rejectedPromise);
+    await TodoController.createTodo(req, res, next);
+    expect(next).toBeCalledWith(errorMessage);
   });
 });
